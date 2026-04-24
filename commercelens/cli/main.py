@@ -31,9 +31,17 @@ def _write_or_print(payload: dict, out: Path | None = None) -> None:
 def product(
     url: str = typer.Argument(..., help="Product page URL to extract."),
     out: Path | None = typer.Option(None, "--out", "-o", help="Optional JSON output path."),
+    render: bool = typer.Option(False, "--render", help="Render the page with Playwright before extraction."),
+    screenshot: Path | None = typer.Option(None, "--screenshot", help="Optional screenshot path when rendering."),
+    html_snapshot: Path | None = typer.Option(None, "--html-snapshot", help="Optional rendered HTML snapshot path."),
 ) -> None:
     """Extract a normalized product object from a product page URL."""
-    result = extract_product(url)
+    result = extract_product(
+        url,
+        render=render,
+        screenshot_path=screenshot,
+        html_snapshot_path=html_snapshot,
+    )
     _write_or_print(result.model_dump(mode="json", exclude_none=True), out=out)
 
 
@@ -53,9 +61,17 @@ def listing(
     url: str = typer.Argument(..., help="Listing/category page URL to extract."),
     out: Path | None = typer.Option(None, "--out", "-o", help="Optional output path."),
     fmt: OutputFormat = typer.Option("json", "--format", "-f", help="Output format: json, jsonl, csv."),
+    render: bool = typer.Option(False, "--render", help="Render the page with Playwright before extraction."),
+    screenshot: Path | None = typer.Option(None, "--screenshot", help="Optional screenshot path when rendering."),
+    html_snapshot: Path | None = typer.Option(None, "--html-snapshot", help="Optional rendered HTML snapshot path."),
 ) -> None:
     """Extract product cards from a listing or category page."""
-    result = extract_listing(url)
+    result = extract_listing(
+        url,
+        render=render,
+        screenshot_path=screenshot,
+        html_snapshot_path=html_snapshot,
+    )
     if out and fmt == "jsonl":
         write_jsonl(result.products, out)
         console.print(f"[green]Wrote {len(result.products)} products to {out}[/green]")
@@ -93,9 +109,11 @@ def crawl(
     max_pages: int = typer.Option(5, "--max-pages", min=1, max=100, help="Maximum listing pages."),
     out: Path | None = typer.Option(None, "--out", "-o", help="Optional output path."),
     fmt: OutputFormat = typer.Option("json", "--format", "-f", help="Output format: json, jsonl, csv."),
+    render: bool = typer.Option(False, "--render", help="Render each page with Playwright before extraction."),
+    debug_dir: Path | None = typer.Option(None, "--debug-dir", help="Save rendered screenshots/HTML snapshots per page."),
 ) -> None:
     """Crawl listing pages by following next-page links and collect product cards."""
-    result = crawl_catalog(url, max_pages=max_pages)
+    result = crawl_catalog(url, max_pages=max_pages, render=render, debug_dir=debug_dir)
     if out and fmt == "jsonl":
         write_jsonl(result.products, out)
         console.print(f"[green]Wrote {len(result.products)} products to {out}[/green]")

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from collections import deque
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 
 from commercelens.core.fetcher import FetchError, fetch_html
+from commercelens.core.renderer import RenderError, render_html
 from commercelens.core.urls import normalize_url, same_domain
 from commercelens.extractors.listing import extract_listing_from_html
 from commercelens.schemas.listing import ListingExtractionResult, ListingProduct
@@ -22,11 +24,19 @@ class CatalogCrawlResult(BaseModel):
         return len(self.products)
 
 
+def _debug_path(debug_dir: str | Path | None, index: int, suffix: str) -> Path | None:
+    if not debug_dir:
+        return None
+    return Path(debug_dir) / f"page_{index:03d}.{suffix}"
+
+
 def crawl_catalog(
     start_url: str,
     max_pages: int = 5,
     follow_next_pages: bool = True,
     same_domain_only: bool = True,
+    render: bool = False,
+    debug_dir: str | Path | None = None,
 ) -> CatalogCrawlResult:
     normalized_start = normalize_url(start_url)
     queue: deque[str] = deque([normalized_start])
@@ -44,10 +54,24 @@ def crawl_catalog(
             continue
 
         visited.add(current_url)
+        page_index = len(visited)
 
         try:
-            html = fetch_html(current_url)
-        except FetchError as exc:
+            if render:
+                rendered = render_html(
+                    current_url,
+                    screenshot_path=_debug_path(debug_dir, page_index, "png"),
+                    html_snapshot_path=_debug_path(debug_dir, page_index, "html"),
+                )
+                html = rendered.html
+                current_url = rendered.final_url or current_url
+                if rendered.screenshot_path:
+                    warnings.append(f"Saved screenshot to {rendered.screenshot_path}")
+                if rendered.html_snapshot_path:
+                    warnings.append(f"Saved HTML snapshot to {rendered.html_snapshot_path}")
+            else:
+                html = fetch_html(current_url)
+        except (FetchError, RenderError) as exc:
             warnings.append(str(exc))
             continue
 

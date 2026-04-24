@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
 from commercelens.core.fetcher import fetch_html
+from commercelens.core.renderer import render_html
 from commercelens.extractors.availability import normalize_availability
 from commercelens.extractors.jsonld import first_jsonld_product
 from commercelens.extractors.opengraph import extract_opengraph
@@ -298,6 +300,25 @@ def extract_product_from_html(html: str, url: str | None = None) -> ProductExtra
     )
 
 
-def extract_product(url: str) -> ProductExtractionResult:
+def extract_product(
+    url: str,
+    render: bool = False,
+    screenshot_path: str | Path | None = None,
+    html_snapshot_path: str | Path | None = None,
+) -> ProductExtractionResult:
+    if render:
+        rendered = render_html(
+            url,
+            screenshot_path=screenshot_path,
+            html_snapshot_path=html_snapshot_path,
+        )
+        result = extract_product_from_html(rendered.html, url=rendered.final_url or url)
+        result.product.metadata["rendered"] = True
+        if rendered.screenshot_path:
+            result.product.metadata["screenshot_path"] = rendered.screenshot_path
+        if rendered.html_snapshot_path:
+            result.product.metadata["html_snapshot_path"] = rendered.html_snapshot_path
+        return result
+
     html = fetch_html(url)
     return extract_product_from_html(html, url=url)
