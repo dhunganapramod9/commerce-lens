@@ -2,7 +2,7 @@
 
 Open-source product, catalog, and price intelligence extraction for developers.
 
-CommerceLens turns messy e-commerce pages into structured product and listing data using schema.org JSON-LD parsing, OpenGraph metadata, DOM heuristics, confidence scoring, catalog crawling, and a clean Python SDK / CLI / FastAPI interface.
+CommerceLens turns messy e-commerce pages into structured product and listing data using schema.org JSON-LD parsing, OpenGraph metadata, DOM heuristics, confidence scoring, catalog crawling, optional browser rendering, and a clean Python SDK / CLI / FastAPI interface.
 
 > Goal: commerce-ready product data, not just raw HTML.
 
@@ -10,13 +10,16 @@ CommerceLens turns messy e-commerce pages into structured product and listing da
 
 Most scraping tools return raw HTML, Markdown, or brittle selector outputs. CommerceLens is designed around normalized commerce objects: product name, brand, price, currency, availability, images, description, SKU, ratings, review counts, canonical URL, listing product cards, confidence scores, and extraction provenance.
 
-CommerceLens is currently in early v0.2 development. The current release focuses on product page extraction, listing/category extraction, basic catalog crawling, and JSONL/CSV export. Browser rendering, price monitoring, and LLM fallback are planned next.
+CommerceLens is currently in early v0.3 development. The current release focuses on product page extraction, listing/category extraction, basic catalog crawling, JSONL/CSV export, and optional Playwright rendering for JavaScript-heavy pages. Price monitoring and LLM fallback are planned next.
 
-## Features in v0.2
+## Features in v0.3
 
 - Product page extraction
 - Listing/category page extraction
 - Basic catalog crawling by following next-page links
+- Optional Playwright browser rendering
+- Rendered HTML snapshot saving
+- Full-page screenshot saving
 - JSON-LD / schema.org Product parsing
 - OpenGraph metadata fallback
 - DOM heuristic fallback
@@ -31,12 +34,21 @@ CommerceLens is currently in early v0.2 development. The current release focuses
 - Python SDK
 - CLI
 - FastAPI API
-- Lightweight dependencies, no heavy ML model required
+- Lightweight default install; browser support is optional
 
 ## Installation
 
+Static extraction only:
+
 ```bash
 pip install -e .
+```
+
+Browser rendering support:
+
+```bash
+pip install -e ".[browser]"
+playwright install chromium
 ```
 
 Or install from requirements:
@@ -58,6 +70,19 @@ print(result.product.price.amount)
 print(result.product.availability)
 ```
 
+Render a JavaScript-heavy product page before extraction:
+
+```python
+from commercelens import extract_product
+
+result = extract_product(
+    "https://example.com/products/sample",
+    render=True,
+    screenshot_path="debug/product.png",
+    html_snapshot_path="debug/product.html",
+)
+```
+
 Extract from local or already-fetched HTML:
 
 ```python
@@ -77,6 +102,19 @@ for item in listing.products:
     print(item.name, item.price, item.url)
 ```
 
+Render a JavaScript-heavy listing page before extraction:
+
+```python
+from commercelens import extract_listing
+
+listing = extract_listing(
+    "https://example.com/collections/shoes",
+    render=True,
+    screenshot_path="debug/listing.png",
+    html_snapshot_path="debug/listing.html",
+)
+```
+
 Crawl a catalog by following next-page links:
 
 ```python
@@ -84,6 +122,19 @@ from commercelens import crawl_catalog
 
 catalog = crawl_catalog("https://example.com/collections/shoes", max_pages=5)
 print(catalog.product_count)
+```
+
+Render each catalog page during crawl and save debug artifacts:
+
+```python
+from commercelens import crawl_catalog
+
+catalog = crawl_catalog(
+    "https://example.com/collections/shoes",
+    max_pages=5,
+    render=True,
+    debug_dir="debug/catalog",
+)
 ```
 
 ## CLI
@@ -94,10 +145,28 @@ Extract from a product URL:
 commercelens product https://example.com/products/sample
 ```
 
+Render first, then extract:
+
+```bash
+commercelens product https://example.com/products/sample \
+  --render \
+  --screenshot debug/product.png \
+  --html-snapshot debug/product.html
+```
+
 Extract product cards from a listing page:
 
 ```bash
 commercelens listing https://example.com/collections/shoes
+```
+
+Render a listing page and export products:
+
+```bash
+commercelens listing https://example.com/collections/shoes \
+  --render \
+  --format jsonl \
+  --out products.jsonl
 ```
 
 Export listing products as JSONL or CSV:
@@ -111,6 +180,17 @@ Crawl a catalog:
 
 ```bash
 commercelens crawl https://example.com/collections/shoes --max-pages 5 --format jsonl --out catalog.jsonl
+```
+
+Render each crawled catalog page and save debug artifacts:
+
+```bash
+commercelens crawl https://example.com/collections/shoes \
+  --max-pages 5 \
+  --render \
+  --debug-dir debug/catalog \
+  --format jsonl \
+  --out catalog.jsonl
 ```
 
 Run the API server:
@@ -141,12 +221,28 @@ curl -X POST http://127.0.0.1:8000/v1/extract/product \
   -d '{"url":"https://example.com/products/sample"}'
 ```
 
+Render and extract a product:
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/extract/product \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com/products/sample", "render": true, "screenshot_path":"debug/product.png", "html_snapshot_path":"debug/product.html"}'
+```
+
 Extract a listing page:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/v1/extract/listing \
   -H "Content-Type: application/json" \
   -d '{"url":"https://example.com/collections/shoes"}'
+```
+
+Render and extract a listing page:
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/extract/listing \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com/collections/shoes", "render": true, "screenshot_path":"debug/listing.png", "html_snapshot_path":"debug/listing.html"}'
 ```
 
 Crawl a catalog:
@@ -157,33 +253,12 @@ curl -X POST http://127.0.0.1:8000/v1/crawl/catalog \
   -d '{"url":"https://example.com/collections/shoes", "max_pages": 5}'
 ```
 
-## Example listing response
+Render crawled catalog pages:
 
-```json
-{
-  "url": "https://example.com/collections/shoes",
-  "page_type": "listing",
-  "products": [
-    {
-      "name": "Sample Sneaker",
-      "url": "https://example.com/products/sample-sneaker",
-      "price": {
-        "amount": 89.99,
-        "currency": "USD",
-        "raw": "$89.99"
-      },
-      "image_url": "https://example.com/images/sneaker.jpg",
-      "availability": "in_stock",
-      "position": 1,
-      "source_selector": "[class*='product-card']",
-      "confidence": 0.95
-    }
-  ],
-  "product_count": 1,
-  "next_page_url": "https://example.com/collections/shoes?page=2",
-  "confidence": 0.95,
-  "warnings": []
-}
+```bash
+curl -X POST http://127.0.0.1:8000/v1/crawl/catalog \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com/collections/shoes", "max_pages": 5, "render": true, "debug_dir":"debug/catalog"}'
 ```
 
 ## Development
@@ -192,6 +267,14 @@ curl -X POST http://127.0.0.1:8000/v1/crawl/catalog \
 pip install -e ".[dev]"
 pytest
 ruff check .
+```
+
+To test browser rendering manually:
+
+```bash
+pip install -e ".[browser]"
+playwright install chromium
+commercelens product https://example.com/products/sample --render
 ```
 
 ## Product roadmap
