@@ -32,9 +32,13 @@ class ListingExtractionRequest(BaseModel):
     url: HttpUrl | None = None
     html: str | None = None
     render: bool = False
+    screenshot_path: str | None = None
+    html_snapshot_path: str | None = None
 
 
 class CatalogCrawlRequest(BaseModel):
     url: HttpUrl
     max_pages: int = Field(default=5, ge=1, le=100)
     follow_next_pages: bool = True
+    render: bool = False
+    debug_dir: str | None = None
