@@ -17,16 +17,13 @@ def utc_now_iso() -> str:
 class JobStatus(str, Enum):
     active = "active"
     paused = "paused"
-    running = "running"
-    failed = "failed"
-    completed = "completed"
     disabled = "disabled"
 
 
 class RunStatus(str, Enum):
     queued = "queued"
     running = "running"
-    success = "success"
+    succeeded = "succeeded"
     failed = "failed"
     skipped = "skipped"
 
@@ -83,12 +80,14 @@ class JobRun(BaseModel):
     status: RunStatus = RunStatus.queued
     started_at: str | None = None
     finished_at: str | None = None
+    duration_ms: int | None = None
     attempt: int = 1
     event_count: int = 0
     delivery_count: int = 0
     warning_count: int = 0
     error: str | None = None
     result: dict[str, Any] | None = None
+    created_at: str = Field(default_factory=utc_now_iso)
 
 
 class WorkerTickResult(BaseModel):
@@ -129,4 +128,4 @@ class WebhookTarget(BaseModel):
     name: str
     url: HttpUrl
     enabled: bool = True
-    event_types: list[str] = Field(default_factory=lambda: ["job.run.success", "job.run.failed", "alert.created"])
+    event_types: list[str] = Field(default_factory=lambda: ["job.run.succeeded", "job.run.failed", "alert.created"])
