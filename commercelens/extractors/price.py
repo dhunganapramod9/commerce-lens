@@ -6,17 +6,21 @@ from commercelens.schemas.product import Price
 
 CURRENCY_SYMBOLS = {
     "$": "USD",
-    "£": "GBP",
-    "€": "EUR",
-    "¥": "JPY",
-    "₹": "INR",
+    "\u00a3": "GBP",
+    "\u20ac": "EUR",
+    "\u00a5": "JPY",
+    "\u20b9": "INR",
+    "\u00c2\u00a3": "GBP",
+    "\u00e2\u201a\u00ac": "EUR",
+    "\u00c2\u00a5": "JPY",
+    "\u00e2\u201a\u00b9": "INR",
 }
 
 CURRENCY_CODES = {"USD", "GBP", "EUR", "JPY", "INR", "AUD", "CAD", "NZD", "CHF", "CNY"}
 
 PRICE_RE = re.compile(
     r"(?P<code>USD|GBP|EUR|JPY|INR|AUD|CAD|NZD|CHF|CNY)?\s*"
-    r"(?P<symbol>[$£€¥₹])?\s*"
+    r"(?P<symbol>[$\u00a3\u20ac\u00a5\u20b9]|\u00c2\u00a3|\u00e2\u201a\u00ac|\u00c2\u00a5|\u00e2\u201a\u00b9)?\s*"
     r"(?P<amount>[0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?|[0-9]+(?:\.[0-9]{1,2})?)",
     flags=re.IGNORECASE,
 )

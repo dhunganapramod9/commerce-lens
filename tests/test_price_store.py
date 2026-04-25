@@ -30,6 +30,8 @@ def test_snapshot_store_tracks_history_and_price_drop(tmp_path) -> None:
     history = store.history(first.product_key)
     assert len(history) == 2
     assert history[0].amount == 80.0
+    assert store.latest(first.product_key).amount == 80.0
+    assert store.list_latest(limit=1)[0].product_key == first.product_key
 
     change = store.detect_change(first.product_key)
     assert change is not None

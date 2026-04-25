@@ -18,6 +18,7 @@ from commercelens.jobs.models import ApiKeyCreate, JobStatus, MonitoringJobCreat
 from commercelens.jobs.store import JobStore
 from commercelens.jobs.worker import MonitoringWorker, run_job_now
 from commercelens.matching.products import match_products
+from commercelens.pricing import build_margin_leak_report, load_competitor_offers_csv, load_owned_products_csv
 from commercelens.storage.exporters import write_csv, write_jsonl
 from commercelens.storage.price_store import PriceSnapshotStore
 
@@ -245,6 +246,24 @@ def match_records(left: Path = typer.Argument(...), right: Path = typer.Argument
         "warnings": left_result.warnings + right_result.warnings,
     }
     _write_or_print(payload, out=out)
+
+
+@app.command("margin-report")
+def margin_report(
+    products: Path = typer.Argument(..., help="CSV with owned products, costs, prices, and margin rules."),
+    competitors: Path = typer.Argument(..., help="CSV with competitor offers keyed by SKU."),
+    store_name: str | None = typer.Option(None, "--store-name"),
+    out: Path | None = typer.Option(None, "--out", "-o"),
+) -> None:
+    """Generate a weekly Margin Leak Report from product and competitor CSVs."""
+    owned_products = load_owned_products_csv(products)
+    competitor_offers = load_competitor_offers_csv(competitors)
+    report = build_margin_leak_report(
+        owned_products,
+        competitor_offers,
+        store_name=store_name,
+    )
+    _write_or_print(report.model_dump(mode="json", exclude_none=True), out=out)
 
 
 @app.command()

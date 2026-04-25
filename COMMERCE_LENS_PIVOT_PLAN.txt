@@ -1,0 +1,113 @@
+Product metrics:
+    SKUs checked
+    competitor URLs checked
+    extraction success rate
+    reports generated
+    report open rate
+    recommendations generated
+    recommendations approved
+    recommendations rejected
+Business metrics:
+    MRR
+    active paying customers
+    churn
+    average revenue per customer
+    expansion from 20-SKU audit to weekly plan
+Outcome metrics:
+    estimated margin at risk
+    unsafe matches blocked
+    products safe to raise
+    competitor out-of-stock opportunities
+    customer-reported dollars saved or recovered
+============================================================
+22. RISKS
+============================================================
+Risk: Customers do not know their costs.
+Mitigation:
+    Start with brands that know COGS. Allow estimated cost or category-level
+    margin rules later.
+Risk: Customers fear price automation.
+Mitigation:
+    Start with reports and approval. Do not automate first.
+Risk: Scraping fails.
+Mitigation:
+    Use customer-provided URLs, confidence scoring, manual review queue, and
+    semi-manual audits early.
+Risk: Reports are interesting but not paid.
+Mitigation:
+    Tie reports to specific dollar impact. Ask before audit: "If we find useful
+    actions, would you pay for weekly monitoring?"
+Risk: Too crowded.
+Mitigation:
+    Never pitch as price tracking. Pitch margin leak reports and pricing
+    actions.
+============================================================
+23. WHAT TO SAY NO TO
+============================================================
+Say no to:
+    generic scraping API
+    generic competitor tracker
+    complex enterprise dashboards
+    auto-repricing on day one
+    too many integrations
+    broad ecommerce analytics
+    brands without cost data
+    custom one-off scraping work that does not lead to weekly monitoring
+Say yes to:
+    20-SKU audits
+    weekly reports
+    clear margin math
+    action recommendations
+    founder-led sales
+    Shopify agencies
+    narrow vertical focus
+============================================================
+24. IMMEDIATE NEXT STEPS
+============================================================
+Next 24 hours:
+1. Update app language:
+       Price tracking -> Margin Leak Report
+       Recommendations -> Pricing Actions
+       Dashboard -> Weekly Report
+2. Create CSV templates:
+       owned_products_template.csv
+       competitor_urls_template.csv
+3. Build sample Margin Leak Report with 20 products.
+4. Fix core repo issues that hurt demo reliability:
+       storage method mismatch
+       currency parsing
+       broken export-history path
+5. Write first outreach list of 100 Shopify brands.
+Next 5 days:
+1. Build report generator.
+2. Build simple report UI.
+3. Create sample PDF/email report.
+4. Send 100 outbound messages.
+5. Run first 2 to 5 audits manually or semi-manually.
+Next 30 days:
+1. 10 audits.
+2. 1 paying weekly report customer.
+3. 1 case study.
+4. 200 to 500 competitor URLs monitored.
+Next 90 days:
+1. 10 paying customers.
+2. $2K to $5K MRR.
+3. 1,000 competitor URLs monitored.
+4. Weekly reports opened and acted on.
+5. YC-ready traction story.
+============================================================
+25. FINAL RECOMMENDATION
+============================================================
+This is the sharper pivot:
+    CommerceLens 2.0
+    Weekly Margin Leak Operator for Shopify Brands
+Do not try to win the crowded price tracker market directly.
+Enter through a simple, painful, recurring question:
+    "Where am I losing pricing profit this week?"
+The wedge:
+    Start with margin leak reports.
+    Build trust.
+    Add approval.
+    Then automate.
+That is more concrete, easier to sell, easier to validate in 30 days, and much
+more differentiated than another competitor price tracker.

@@ -143,6 +143,9 @@ class PriceSnapshotStore:
         rows = self.history(product_key, limit=1)
         return rows[0] if rows else None
 
+    def latest(self, product_key: str) -> ProductSnapshot | None:
+        return self.latest_snapshot(product_key)
+
     def history(self, product_key: str, limit: int = 100) -> list[ProductSnapshot]:
         with self._connect() as connection:
             rows = connection.execute(
@@ -169,10 +172,12 @@ class PriceSnapshotStore:
             ).fetchall()
         return [self._row_to_snapshot(row) for row in rows]
 
-    def all_latest(self) -> list[ProductSnapshot]:
+    def all_latest(self, limit: int | None = None) -> list[ProductSnapshot]:
+        limit_clause = " LIMIT ?" if limit is not None else ""
+        params = (limit,) if limit is not None else ()
         with self._connect() as connection:
             rows = connection.execute(
-                """
+                f"""
                 SELECT ps.*
                 FROM price_snapshots ps
                 JOIN (
@@ -182,9 +187,14 @@ class PriceSnapshotStore:
                 ) latest
                 ON ps.product_key = latest.product_key AND ps.captured_at = latest.max_captured_at
                 ORDER BY ps.captured_at DESC
-                """
+                {limit_clause}
+                """,
+                params,
             ).fetchall()
         return [self._row_to_snapshot(row) for row in rows]
+
+    def list_latest(self, limit: int = 100) -> list[ProductSnapshot]:
+        return self.all_latest(limit=limit)
 
     def detect_change(self, product_key: str) -> PriceChange | None:
         snapshots = self.history(product_key, limit=2)

@@ -1,1 +1,4 @@
-from .main import app, scrape_books, extract_attributes, scrape_page
+"""Repository marker for local tooling.
+
+The public SDK lives in ``commercelens/__init__.py``.
+"""

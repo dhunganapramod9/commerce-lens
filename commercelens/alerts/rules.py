@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, model_validator
 
 from commercelens.storage.price_store import PriceChange, ProductSnapshot
 
@@ -45,6 +45,20 @@ class AlertRule(BaseModel):
     urls: list[str] | None = None
     destinations: list[AlertDestination] = Field(default_factory=lambda: [AlertDestination()])
     enabled: bool = True
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_legacy_fields(cls, data: object) -> object:
+        if not isinstance(data, dict):
+            return data
+        normalized = dict(data)
+        if "condition" not in normalized and "type" in normalized:
+            normalized["condition"] = normalized["type"]
+        if "threshold" not in normalized and "threshold_percent" in normalized:
+            normalized["threshold"] = normalized["threshold_percent"]
+        if not normalized.get("name"):
+            normalized["name"] = str(normalized.get("condition", "alert"))
+        return normalized
 
 
 class AlertEvent(BaseModel):

@@ -1,0 +1,4 @@
+sku,product_name,brand,category,current_price,cost,min_margin_percent,product_url,inventory_status,weekly_units_sold
+SERUM-50,Hydrating Serum 50ml,Northstar Beauty,Skincare,59.99,38.00,35,https://example.com/products/hydrating-serum,in_stock,24
+HOODIE-PRO,Hoodie Pro,Northstar Apparel,Apparel,64.99,34.00,40,https://example.com/products/hoodie-pro,in_stock,18
+PET-CHEW-30,Daily Pet Chews 30ct,Northstar Pets,Pet products,39.99,18.50,45,https://example.com/products/daily-pet-chews,in_stock,42

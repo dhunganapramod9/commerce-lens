@@ -1,0 +1,4 @@
+sku,competitor_name,competitor_url,competitor_price,competitor_currency,competitor_availability,extraction_confidence,last_checked_at
+SERUM-50,Competitor A,https://competitor.example/products/serum,49.99,USD,in_stock,0.95,2026-04-25T00:00:00+00:00
+HOODIE-PRO,Competitor B,https://competitor.example/products/hoodie,79.99,USD,in_stock,0.92,2026-04-25T00:00:00+00:00
+PET-CHEW-30,Competitor C,https://competitor.example/products/pet-chews,35.99,USD,out_of_stock,0.91,2026-04-25T00:00:00+00:00

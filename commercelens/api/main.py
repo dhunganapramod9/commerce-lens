@@ -186,7 +186,7 @@ def worker_tick_endpoint(limit: int = 25, dry_run: bool = False, deliver: bool =
     return MonitoringWorker(store=store).tick(limit=limit, dry_run=dry_run, deliver=deliver)
 
 
-@app.post("/v1/api-keys", response_model=ApiKeyCreateResult)
+@app.post("/v1/api-keys", response_model=ApiKeyCreateResult, dependencies=[Depends(require_api_key)])
 def create_api_key_endpoint(request: ApiKeyCreate, store: JobStore = Depends(get_job_store)) -> ApiKeyCreateResult:
     return store.create_api_key(request)
 
