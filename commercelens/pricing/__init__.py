@@ -13,6 +13,7 @@ from commercelens.pricing.recommendations import (
     recommend_pricing_action,
 )
 from commercelens.pricing.csv_io import load_competitor_offers_csv, load_owned_products_csv
+from commercelens.pricing.report_html import render_margin_leak_report_html
 
 __all__ = [
     "CompetitorOffer",
@@ -27,4 +28,5 @@ __all__ = [
     "load_owned_products_csv",
     "minimum_safe_price",
     "recommend_pricing_action",
+    "render_margin_leak_report_html",
 ]

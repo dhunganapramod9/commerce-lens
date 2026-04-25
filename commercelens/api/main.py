@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 
 from commercelens.alerts.runner import MonitorRunResult, run_monitor_config, run_monitor_config_file
 from commercelens.api.auth import get_job_store, require_api_key
@@ -15,6 +18,13 @@ from commercelens.jobs.models import ApiKeyCreate, ApiKeyCreateResult, JobRun, J
 from commercelens.jobs.store import JobStore
 from commercelens.jobs.worker import MonitoringWorker, run_job_now
 from commercelens.matching.products import ProductMatchResult, match_products
+from commercelens.pricing import (
+    MarginLeakReport,
+    build_margin_leak_report,
+    load_competitor_offers_csv,
+    load_owned_products_csv,
+    render_margin_leak_report_html,
+)
 from commercelens.schemas.alerts import RunMonitorConfigFileRequest, RunMonitorConfigRequest
 from commercelens.schemas.connectors import MatchProductsRequest, NormalizeRecordsRequest
 from commercelens.schemas.listing import CatalogCrawlRequest, ListingExtractionRequest, ListingExtractionResult
@@ -23,6 +33,7 @@ from commercelens.schemas.product import ProductExtractionRequest, ProductExtrac
 from commercelens.storage.price_store import PriceSnapshotStore, ProductSnapshot
 
 API_VERSION = "0.7.0"
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 app = FastAPI(
     title="CommerceLens API",
@@ -189,6 +200,22 @@ def worker_tick_endpoint(limit: int = 25, dry_run: bool = False, deliver: bool =
 @app.post("/v1/api-keys", response_model=ApiKeyCreateResult, dependencies=[Depends(require_api_key)])
 def create_api_key_endpoint(request: ApiKeyCreate, store: JobStore = Depends(get_job_store)) -> ApiKeyCreateResult:
     return store.create_api_key(request)
+
+
+def _demo_margin_report() -> MarginLeakReport:
+    products = load_owned_products_csv(PROJECT_ROOT / "examples" / "owned_products_template.csv")
+    offers = load_competitor_offers_csv(PROJECT_ROOT / "examples" / "competitor_urls_template.csv")
+    return build_margin_leak_report(products, offers, store_name="Demo Store")
+
+
+@app.get("/v1/margin-report/demo", response_model=MarginLeakReport)
+def demo_margin_report_endpoint() -> MarginLeakReport:
+    return _demo_margin_report()
+
+
+@app.get("/v1/margin-report/demo.html", response_class=HTMLResponse)
+def demo_margin_report_html_endpoint() -> HTMLResponse:
+    return HTMLResponse(render_margin_leak_report_html(_demo_margin_report()))
 
 
 @app.post("/v1/records/normalize", response_model=DatasetLoadResult)

@@ -18,7 +18,12 @@ from commercelens.jobs.models import ApiKeyCreate, JobStatus, MonitoringJobCreat
 from commercelens.jobs.store import JobStore
 from commercelens.jobs.worker import MonitoringWorker, run_job_now
 from commercelens.matching.products import match_products
-from commercelens.pricing import build_margin_leak_report, load_competitor_offers_csv, load_owned_products_csv
+from commercelens.pricing import (
+    build_margin_leak_report,
+    load_competitor_offers_csv,
+    load_owned_products_csv,
+    render_margin_leak_report_html,
+)
 from commercelens.storage.exporters import write_csv, write_jsonl
 from commercelens.storage.price_store import PriceSnapshotStore
 
@@ -264,6 +269,25 @@ def margin_report(
         store_name=store_name,
     )
     _write_or_print(report.model_dump(mode="json", exclude_none=True), out=out)
+
+
+@app.command("margin-report-html")
+def margin_report_html(
+    products: Path = typer.Argument(..., help="CSV with owned products, costs, prices, and margin rules."),
+    competitors: Path = typer.Argument(..., help="CSV with competitor offers keyed by SKU."),
+    store_name: str | None = typer.Option(None, "--store-name"),
+    out: Path = typer.Option(Path("margin_report.html"), "--out", "-o"),
+) -> None:
+    """Generate a standalone HTML Margin Leak Report."""
+    owned_products = load_owned_products_csv(products)
+    competitor_offers = load_competitor_offers_csv(competitors)
+    report = build_margin_leak_report(
+        owned_products,
+        competitor_offers,
+        store_name=store_name,
+    )
+    out.write_text(render_margin_leak_report_html(report), encoding="utf-8")
+    console.print(f"[green]Wrote Margin Leak Report to {out}[/green]")
 
 
 @app.command()
