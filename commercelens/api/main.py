@@ -3,13 +3,16 @@ from __future__ import annotations
 from fastapi import FastAPI, HTTPException
 
 from commercelens.alerts.runner import MonitorRunResult, run_monitor_config, run_monitor_config_file
+from commercelens.connectors.datasets import DatasetLoadResult
 from commercelens.core.crawler import CatalogCrawlResult, crawl_catalog
 from commercelens.core.fetcher import FetchError, fetch_html
 from commercelens.core.monitor import BatchMonitorResult, MonitorResult, monitor_product, monitor_products
 from commercelens.core.renderer import RenderError
 from commercelens.extractors.listing import extract_listing, extract_listing_from_html
 from commercelens.extractors.product import extract_product, extract_product_from_html
+from commercelens.matching.products import ProductMatchResult, match_products
 from commercelens.schemas.alerts import RunMonitorConfigFileRequest, RunMonitorConfigRequest
+from commercelens.schemas.connectors import MatchProductsRequest, NormalizeRecordsRequest
 from commercelens.schemas.listing import CatalogCrawlRequest, ListingExtractionRequest, ListingExtractionResult
 from commercelens.schemas.monitor import MonitorBatchRequest, MonitorProductRequest, PriceHistoryRequest
 from commercelens.schemas.product import ProductExtractionRequest, ProductExtractionResult
@@ -17,14 +20,14 @@ from commercelens.storage.price_store import PriceSnapshotStore, ProductSnapshot
 
 app = FastAPI(
     title="CommerceLens API",
-    description="Product, catalog, monitoring, and price intelligence extraction for developers.",
-    version="0.5.0",
+    description="Product, catalog, monitoring, alerting, matching, and price intelligence extraction for developers.",
+    version="0.6.0",
 )
 
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "commercelens", "version": "0.5.0"}
+    return {"status": "ok", "service": "commercelens", "version": "0.6.0"}
 
 
 @app.post("/v1/extract/product", response_model=ProductExtractionResult)
@@ -115,3 +118,13 @@ def run_alert_config_endpoint(request: RunMonitorConfigRequest) -> MonitorRunRes
 @app.post("/v1/alerts/run-file", response_model=MonitorRunResult)
 def run_alert_config_file_endpoint(request: RunMonitorConfigFileRequest) -> MonitorRunResult:
     return run_monitor_config_file(request.path, dry_run=request.dry_run, deliver=request.deliver)
+
+
+@app.post("/v1/records/normalize", response_model=DatasetLoadResult)
+def normalize_records_endpoint(request: NormalizeRecordsRequest) -> DatasetLoadResult:
+    return DatasetLoadResult(records=request.records)
+
+
+@app.post("/v1/match/products", response_model=ProductMatchResult)
+def match_products_endpoint(request: MatchProductsRequest) -> ProductMatchResult:
+    return match_products(request.left, request.right, threshold=request.threshold, top_k=request.top_k)
