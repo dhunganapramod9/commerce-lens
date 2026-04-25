@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from commercelens.alerts.config import AlertRule, MonitorConfig, MonitorTarget
-from commercelens.jobs.models import JobStatus, MonitoringJobCreate, MonitoringJobUpdate, ScheduleKind
+from commercelens.jobs.models import ApiKeyCreate, JobStatus, MonitoringJobCreate, MonitoringJobUpdate, ScheduleKind
 from commercelens.jobs.store import JobStore
 
 
@@ -46,7 +46,7 @@ def test_manual_job_has_no_next_run(tmp_path: Path) -> None:
 
 def test_api_key_roundtrip(tmp_path: Path) -> None:
     store = JobStore(tmp_path / "jobs.db")
-    result = store.create_api_key(request={"name": "local dev"})  # type: ignore[arg-type]
+    result = store.create_api_key(ApiKeyCreate(name="local dev"))
     assert result.token.startswith("cl_")
     verified = store.verify_api_key(result.token)
     assert verified is not None
